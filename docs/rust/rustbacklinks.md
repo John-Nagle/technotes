@@ -42,11 +42,26 @@ This is the hard part. Borrows must be disjoint. They can be
 * Disjoint as to scope - if all **.borrow()** and **.borrow_mut()** calls return results with statically defined scopes, and no two scopes of the same type overlap, the borrows are disjoint.
 * Disjoint as to instance - if two items are both borrowed in overlapping scopes, but the borrowed objects can be shown to be different objects, the borrows are disjoint. This is the hard one. If such disjointness analysis is confined to single functions, the checker's job appears manageable.
 
+## The two main patterns
+### Single ownership with back references that never outlive the owning reference
+(NEED PICTURE)
+This is the most common case - A owns B, and B needs to be able to find A. 
+A has a unique owner. This pattern covers trees with backlinks, as well as doubly-linked lists. 
+It also covers C++ type object inheritance, where the connection from child to parent is maintained automatically.
+It can be expressed in Rust with **Rc**, **Weak**, and **RefCell**, but with more dynamism, and less compile time checking, than is appropriate.
+When a backlink is needed, Rust's simple compile-time checked ownership model has to be abandoned. That's a high price to pay.
+
+#### Recent progress in C++
+Ref: https://techblog.rosemanlabs.com/c++/safety/object-lifetime/2025/08/28/a-safe-pointer-that-protects-against-use-after-free-and-updates-when-the-pointee-is-moved.html
 
 ## A simple example - a tree with back links.
 (MORE)
+### True multiple ownership with weak back references
+This is the more general case, where reference counts are doing real work.
+(MORE)
 
-## A complex example -- bidrectional transitive closure with many back references
+
+#### A complex example -- bidrectional transitive closure with many back references
 This is a program previously posted on the Rust Forums for code review. 
 
 Ref to running code: [Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=3071faba427b440643d26ac5fe182caa)
@@ -60,6 +75,9 @@ It's more complex than the usual doubly-linked list and backlinked tree examples
 
 The trick is doing this entirely in safe Rust. It uses RefCell, borrow() calls, and Weak pointers for its non-owning back pointers.
 As is typical with Rust, it was really hard to get the borrow plumbing right, and then it just worked.
+
+The basic data structure here is a set whose members can find the set of which they are a part. Basic set operations, such as union, are provided.
+Back references from elements to sets are updated when a union operation is performed.
 
 The goal here is to show how all **.borrow()** and **.borrow_mut()** calls in this code could be checked at compile time. 
 We can then replace all **RefCell<T>** instances with our proposed **CompiledRefCell<T>**
