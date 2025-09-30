@@ -7,7 +7,7 @@ John Nagle
 
 This is a program posted on the Rust Forums for discussion.
 
-Ref: [https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=3071faba427b440643d26ac5fe182caa](Rust Playground)
+Ref to running code: [Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=3071faba427b440643d26ac5fe182caa)
 
 This is a bidrectional transitive closure algorithm. What it's doing is computing whether you can get there from here for a big grid of rectangular regions. If two rectangles share some edge space, they're reachable from each other. The algorithm computes collections of VisGroup, regions which are all reachable from each other.
 
