@@ -36,6 +36,8 @@ For the purpose of this discussion, we will call that new type, with no run-time
 That name is just for discussion purposes; don't waste effort bikshedding on this.
 * Define a set of checking rules that are not too difficult to check at compile time but are powerful enough to handle useful complex cases.
 
+The big question: is there a large enough intersection between what we can check easily and what is useful?
+
 ### Checking rules
 This is the hard part. Borrows must be disjoint. They can be
 * Disjoint as to type - RefCell&lt;A&gt; and RefCell&lt;B&gt;, where A and B cannot be the same type, are disjoint.
@@ -52,7 +54,19 @@ It also covers C++ type object inheritance, where the connection from child to p
 It can be expressed in Rust with **Rc**, **Weak**, and **RefCell**, but with more dynamism, and less compile time checking, than is appropriate.
 When a backlink is needed, Rust's simple compile-time checked ownership model has to be abandoned. That's a high price to pay.
 
-#### Recent progress in C++
+What we really want is single ownership with weak backlinks, combined with a guarantee that no weak backlink can outlive the owning reference, and
+that no weak link to a struct is temporarily a strong link at the moment the struct is dropped. That can be checked at run time. Could it be checked
+at compile time?
+
+The key here is the use of .upgrade() of weak pointers in a scoped way only.
+The same kind of disjointness rules mentioned for RefCell have to be applied to .upgrade() calls.
+
+(MORE)
+
+(NEEDS WORKED EXAMPLE)
+
+#### Recent progress in C++ in this area
+The C++ crowd is working on this. 
 Ref: https://techblog.rosemanlabs.com/c++/safety/object-lifetime/2025/08/28/a-safe-pointer-that-protects-against-use-after-free-and-updates-when-the-pointee-is-moved.html
 
 ## A simple example - a tree with back links.
@@ -104,53 +118,15 @@ Question: are there other situations where a different kind of check that instan
 
 (Use case: this is for a support tool for my metaverse client for Second Life/Open Simulator. It is a rule of the grid that you can only see regions you can reach. Some areas are full of checkerboards of isolated private regions, none of which can see each other. Others are big land areas, sometimes connected only by narrow strings of regions. I'm working on an impostor system for long-distance visibility, and I need to do some pre-computation to decide which impostors are visible from where.)
 
+## Trouble spots
+### Statics
+(MORE)
+### Generics and traits
+These make it hard to trace the call tree.
+
+(MORE)
+### Function references/lambdas?
+(MORE)
 
 
---------------------
-## Outline
-### Notes on compile time borrow checking for RefCell type situations
-
-- Goal: Do at compile time what RefCell / .borrow_mut() does at run time.
-- Goal: figure out how far we can get with somewhat simple checking.
-
-- Disjointness in code
--- No two .borrow_mut() calls for the 'same RefCell' at the same time.
---- Mostly enforced by scope.
---- Requires tracing the call chain.
---- Generics can limit tracing.
-
-- Disjointness in data.
--- What does "same RefCell" mean?
---- RefCell<T>, where T is different, is usually not the 'same RefCell'.
----- Are there exceptions to this?
-
-- If either code or data demonstrate disjointness, it's safe.
--- Exceptions?
-
-- Trouble spots.
--- Statics
--- Generics
--- Function references/lambdas?
-
-- Use cases
--- Given a tree with backpointers, can we swap two subtrees?
---- Hard, but if we can do that, this is useful.
---- Can we have two .borrow_mut() scopes active on two
-different RefCells of the same type?
---- When can we easily tell those are disjoint?
----- They're both borrowed in the same function,
-from structs we know are disjoint.
----- This is the hard case.
-
-- Basic question: is there an intersection between what we can check easily and what is useful?
-
-struct Node {
-   parent: Option<Rc::Weak<RefCell<Node>>>,
-   children: Vec<Rc<RefCell<Node>>>,
-}
-fn swap_subtree(&mut node1: Node, child1: usize, &mut Node2, child2: usize)
-{
-}
-
-If we can make that work, this is useful.
 
