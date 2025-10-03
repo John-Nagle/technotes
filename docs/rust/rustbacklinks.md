@@ -38,13 +38,14 @@ That name is just for discussion purposes; don't waste effort bikshedding on thi
 
 ### Checking rules
 This is the hard part. Borrows must be disjoint. They can be
-* Disjoint as to type - RefCell<A> and RefCell<B>, where A and B cannot be the same type, are disjoint.
+* Disjoint as to type - RefCell&lt;A&gt; and RefCell&lt;B&gt;, where A and B cannot be the same type, are disjoint.
 * Disjoint as to scope - if all **.borrow()** and **.borrow_mut()** calls return results with statically defined scopes, and no two scopes of the same type overlap, the borrows are disjoint.
 * Disjoint as to instance - if two items are both borrowed in overlapping scopes, but the borrowed objects can be shown to be different objects, the borrows are disjoint. This is the hard one. If such disjointness analysis is confined to single functions, the checker's job appears manageable.
 
 ## The two main patterns
 ### Single ownership with back references that never outlive the owning reference
 (NEED PICTURE)
+
 This is the most common case - A owns B, and B needs to be able to find A. 
 A has a unique owner. This pattern covers trees with backlinks, as well as doubly-linked lists. 
 It also covers C++ type object inheritance, where the connection from child to parent is maintained automatically.
@@ -56,8 +57,10 @@ Ref: https://techblog.rosemanlabs.com/c++/safety/object-lifetime/2025/08/28/a-sa
 
 ## A simple example - a tree with back links.
 (MORE)
+
 ### True multiple ownership with weak back references
 This is the more general case, where reference counts are doing real work.
+
 (MORE)
 
 
