@@ -61,6 +61,8 @@ at compile time?
 The key here is the use of .upgrade() of weak pointers in a scoped way only.
 The same kind of disjointness rules mentioned for RefCell have to be applied to .upgrade() calls.
 
+Working on this for Rust: https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=4216d6b42837ff021400b582593a23f4
+
 (MORE)
 
 (NEEDS WORKED EXAMPLE)
@@ -68,6 +70,8 @@ The same kind of disjointness rules mentioned for RefCell have to be applied to 
 #### Recent progress in C++ in this area
 The C++ crowd is working on this. 
 Ref: https://techblog.rosemanlabs.com/c++/safety/object-lifetime/2025/08/28/a-safe-pointer-that-protects-against-use-after-free-and-updates-when-the-pointee-is-moved.html
+
+
 
 ## A simple example - a tree with back links.
 (MORE)
