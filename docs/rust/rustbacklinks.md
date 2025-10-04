@@ -132,5 +132,10 @@ These make it hard to trace the call tree.
 ### Function references/lambdas?
 (MORE)
 
+# In-progress notes to be merged into the above
+The preferred coding style is short borrows with very narrow scope, typically within one statement. That's normally considered bad, because it means extra time checking for double borrows. But if this kind of borrow can be made compile-time, it's free. The compiler is going to have to check for overlapping borrow scopes, and the more local the borrow scope, the less compile time work is involved. Storing a borrowed link in a structure or a static requires too much compile-time analysis, but if the lifetime of the borrow is very local, the analysis isn't hard. Borrow scopes which include a function call imply the need for cross-function call tree analysis. It's been pointed out to me that traits and generics make this especially hard, because you don't know what the instantiation can do before generics are instantiated. That might require some kind of annotation that says to the compiler "Implementations of function foo for trait Foobar are not allowed to do an upgrade of an Rc<Bar>". Then, at the call, the compiler can tell it's OK for a borrow scope to include that call, and in an implementation of the called function, upgrade of Rc<Bar> is prohibited. In fact, if this is done for all functions that receive an Rc<Bar> parameter, it might be possible to do all this without call tree analysis. It's becomes a type constraint. Need to talk to the type theorists, of which I am not one.
+
+All those .borrow() calls are annoying. It might be possible to elide them most of the time, in the same way that you can refer to the item within an Rc without explicitly de-referencing the Rc. That would be nice from an ergonomic perspective. But it runs the risk of generating confusing compiler messages when a problem is detected. It would be like those confusing error messages that arise when type inference can't figure something out or the borrow checker needs explicit lifetime info to resolve an ambiguity.
+
 
 
