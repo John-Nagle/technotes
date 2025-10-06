@@ -64,6 +64,31 @@ The same kind of disjointness rules mentioned for RefCell have to be applied to 
 Working on this for Rust: https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=4216d6b42837ff021400b582593a23f4
 
 (MORE)
+(WORK IN PROGRESS)
+Define
+
+    type OwnerCell<T> = Rc<RefCell<T>>;
+
+This captures the semantics of what's proposed here.
+It's an easy way to think about this. 
+It does not enforce the single-owner requirement.
+Restrictions needed are:
+
+* **OwnerCell** is not cloneable. This enforces the single-owner requirement.
+
+* Each **.borrow()** and **.borrow_mut()** requires its own **downgrade()** call.
+The strong pointer created by a downgrade is never used other than for an immediate **.borrow()** and **.borrow_mut()**.
+This can be achieved by writing an OwnerCell type that does not expose **upgrade()**.
+So **.borrow()** and **.borrow_mut()** would implicitly do the **upgrade()** and panic on failure.
+
+* The scopes of **.borrow()** and **.borrow_mut()** must be disjoint, as above, to prevent such panics. 
+That's what we would like to check at compile time.
+
+* When an **OwnerCell** is dropped, it is an error if any borrows are active.
+This, too, should be checked at compile time. That's not too hard if all borrows have limited scope.
+
+This can be written in Rust with run time enforcement.
+Can these restrictions be checked at compile time?
 
 (NEEDS WORKED EXAMPLE)
 
