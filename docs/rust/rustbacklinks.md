@@ -63,8 +63,60 @@ So, how to do this? In two parts. The two patterns need different approaches.
 
 ## Single ownership with back references that never outlive the owning reference
 This is the most common case. C++ and C programmers think of it as a natural idiom.
-But it's tricky to make it work in safe Rust.
+Here's how it looks in C++:
 
+    class Node {
+        public:
+            Node* parent;
+            std::vector<std::unique_ptr<Node>> children;
+            name: std::string;
+    }
+    
+    ...
+    
+    //  Print name of self and parent
+    void Node::print(Node &self) {
+        printf("Node %s, parent %s", 
+            self.name, self.parent ? self.parent.name : ""); 
+    }
+    
+(C++ CODE NEEDS WORK AND COMPILABLE EXAMPLE)
+
+Now in Rust:
+
+    type NodeWeakLink = Rc::Weak<RefCell<Node>>;
+    type NodeStronLink = Rc<RefCell<Node>>;
+
+    struct Node {
+        /// Weak link to parent
+        parent: Option<NodeWeakLink>,
+        /// Owning links to children
+        children: Vec<NodeStrongLink>,
+        /// Node name
+        name: String
+    }
+    
+    impl Node {
+        /// Print name of self and parent.
+        fn print(&self) {
+            //  Here's the ergonomic problem.
+            //  Referencing the parent is ugly.
+            let parent_name = if let Some(parent_link) = some.parent {
+                parent.link.upgrade()   // it's a weak link
+                .except("Parent is gone")   // it might be dead
+                .borrow()   // have to borrow from the RefCell
+                .name       // get the name
+                .clone()    // have to clone so reference does not outlive borrow
+            } else {
+                "".to_string()
+            };
+            println!("Node {}, parent {}",
+                self.name, parent_name);
+        }
+    }
+        
+
+### How to improve on this.
 The key here is to find some way to guarantee that no weak back references outlive the owning reference.
 If we can check that when the owning reference is dropped, we don't have to check it when the weak
 references are temporarily upgraded. 
